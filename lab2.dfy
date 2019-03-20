@@ -334,13 +334,18 @@ method computeFibonacci(x:int) returns (z:int)
     if (x==0){ 
         return 1;
     }else{
-        var i := 1;
-        while (i < x)
-        
-            invariant 1 <= i <= x;
-            
-        {
-            i := i + 1;
-        }
+        var a := 1;
+    var b := 1;
+    var i := 1;
+    while i < x
+        decreases x - i
+        invariant 1 <= i <= x
+        invariant a == fib(i-1)
+        invariant b == fib(i)
+    {
+      a, b := b, a+b;
+      i := i + 1;
     }
+    z := b;
+  }
 }
