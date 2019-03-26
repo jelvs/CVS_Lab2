@@ -22,7 +22,26 @@
     so that it satisfies the post-conditions assuming the pre-conditions.
 */
 method indexOf(a:array<int>, n:int, elem:int) returns (idx:int)
-
+requires n>= 0 && n <= a.Length
+ensures idx >= -1 && idx < n
+ensures idx >= 0 ==> a[idx] == elem
+ensures idx >= 0 ==> forall j :: 0 <= j < idx ==> a[j] != elem
+ensures idx < 0 ==> forall j :: 0 <= j < n ==> a[j] != elem
+{
+    var i:int := 0;
+    
+    while(i < n)
+    decreases n - i
+    invariant i >= 0 && i <= n
+    invariant forall j :: 0 <= j < i ==> a[j] != elem
+    {
+        if(a[i] == elem){
+            return i ;
+        }
+        i := i + 1;
+    }
+    return -1;
+}
 /**
     Specify and implement method max. This method retuns a pair where
     the first element is the greatest value in the array and the second
@@ -35,6 +54,33 @@ method indexOf(a:array<int>, n:int, elem:int) returns (idx:int)
     so that it satisfies the post-conditions assuming the pre-conditions.
 */
 method max(a:array<int>, n:int) returns (elem:int, idx:int)
+requires n > 0 && n < a.Length
+ensures forall i :: 0 <= i < n ==> elem >= a[i]
+ensures idx >=0 && idx < n
+ensures a[idx] == elem
+{
+    var max:int := a[0];
+    var maxIdx:int := 0;
+
+    var i:int := 1;
+
+    while(i < n)
+    decreases n - i
+    invariant i >= 0 && i <= n
+    invariant forall j :: 0 <= j < i ==> a[j] <= max
+    invariant maxIdx >= 0 && maxIdx < i
+    invariant a[maxIdx] == max
+    {
+        if(a[i] > max){
+            max := a[i];
+            maxIdx :=i;
+        }
+        i := i + 1;
+    }
+    return max, maxIdx;
+
+}
+
 
 /**
     Specify and implement method min. This method retuns a pair where
@@ -47,7 +93,33 @@ method max(a:array<int>, n:int) returns (elem:int, idx:int)
     so that it satisfies the post-conditions assuming the pre-conditions.
 */
 method min(a:array<int>, n:int) returns (elem:int, idx:int)
-requires n > 0 && n <=a.Length 
+requires n > 0 && n <=a.Length
+ensures forall i :: 0 <= i < n ==> elem <= a[i]
+ensures idx >=0 && idx < n
+ensures a[idx] == elem
+{
+    var min:int := a[0];
+    var minIdx:int := 0;
+
+    var i:int := 1;
+
+    while(i < n)
+    decreases n - i
+    invariant i >= 0 && i <= n
+    invariant forall j :: 0 <= j < i ==> a[j] >= min
+    invariant minIdx >= 0 && minIdx < i
+    invariant a[minIdx] == min
+    {
+        if(a[i] < min){
+            min := a[i];
+            minIdx := i;
+        }
+        i := i + 1;
+    }
+    return min, minIdx;
+
+}
+
 
 /**
     Specify and implement method fillK. This method retuns true if and only
@@ -62,6 +134,26 @@ requires n > 0 && n <=a.Length
     so that it satisfies the post-conditions assuming the pre-conditions.
 */
 method fillK(a:array<int>, n:int, k:int, count:int) returns (b:bool)
+requires 0 <= n <= a.Length
+requires count > 0 && count <= n
+ensures n == 0 ==> b
+ensures b <==> forall j :: 0 <= j < count ==> a[j] == k
+
+{
+    var i:int := 0;
+
+    while(i < count)
+    decreases count - i
+    invariant i >= 0 && i <= count
+    invariant forall j :: 0 <= j < i ==> k == a[j]
+    {
+        if(a[i] != k){
+            return false;
+        }
+        i := i + 1;
+    }
+    return true;
+}
 
 /**
     Specify and implement method containsSubString. This method tests wheteher or
@@ -75,7 +167,58 @@ method fillK(a:array<int>, n:int, k:int, count:int) returns (b:bool)
 
     Hint: you may want to define an auxiliary function and method.
 */
+
+function subString(a:array<char>, b:array<char>, offset:int, length:int) : bool
+requires offset >= 0 && offset < a.Length - b.Length
+requires length <= b.Length
+reads a,b
+{
+    forall i :: 0 <= i < length ==> a[offset + i] == b[i]
+}
+
+method isSubString(a:array<char>, b:array<char>, offset:int) returns (result:bool)
+requires offset >= 0 && offset < a.Length - b.Length
+ensures result <==> subString(a, b, offset, b.Length)
+{
+    var i:int := 0;
+
+    while(i < b.Length)
+    decreases b.Length - i
+    invariant 0 <= i <= b.Length
+    invariant subString(a, b, offset, i)
+    
+    {
+        if(a[offset + i] != b[i]){
+            return false;
+        }
+        i := i + 1;
+    }
+    return true;
+}
+
 method containsSubString(a:array<char>, b:array<char>) returns (pos:int)
+requires b.Length <= a.Length
+ensures pos >= -1 && pos < a.Length - b.Length
+ensures pos >= 0 ==> subString(a, b, pos, b.Length)
+ensures pos == -1 ==> forall i :: 0 <= i < a.Length - b.Length ==> !subString(a,b, i, b.Length)
+{
+    var i:int := 0;
+    while(i < a.Length - b.Length)
+
+    decreases a.Length - b.Length - i
+    invariant i >= 0 && i <= (a.Length-b.Length)
+    invariant forall j :: 0 <= j < i ==> !subString(a, b, j, b.Length)
+
+    {
+        var temp:bool := isSubString(a,b,i);
+        if(temp){
+            return i;
+        }
+        i := i + 1;
+
+    }
+    return -1;
+}
     
 /**
     Specify and implement method resize. This method returns a new array
@@ -109,6 +252,33 @@ method resize(a:array<int>) returns (b:array<int>)
     so that it satisfies the post-conditions assuming the pre-conditions.
 */
 method reverse(a:array<int>, n:int) returns (r:array<int>)
+requires 0 <= n <= a.Length
+ensures r.Length == a.Length
+ensures forall j :: (0 <= j < n) ==> r[j] == a[n-1-j]
+ensures forall j :: (n <= j < r.Length) ==> r[j] == a[j]
+{
+    r := new int[a.Length];
+    var i := 0;
+    while (i < n)
+        decreases n-i
+        invariant 0 <= i <= n
+        invariant forall j :: (0<= j < i) ==> r[j] == a[n-1-j]
+    {
+        r[i] := a[n-1-i];
+        i := i + 1;
+    }
+    while (i < a.Length)
+    decreases a.Length - i
+    invariant n <= i <= a.Length
+    invariant forall j :: (0<= j < n) ==> r[j] == a[n-1-j];
+    invariant forall j :: (n <= j < i) ==> r[j] == a[j];
+    {
+        r[i] := a[i];
+        i := i + 1;
+
+    }
+   
+}
 
 /**
     Specify and implement method push.
