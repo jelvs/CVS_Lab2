@@ -21,12 +21,47 @@
  */
 class CreditAccount {
 
+    var balance:int;
+    var credit:int
+
+  function method Balance(): int
+
+  //this pode ser omitido( mas ser o mais especifico possivel)
+  reads this `balance
+  {
+    balance
+  }
+
+  function method BalanceWCredit(): int
+
+  //this pode ser omitido( mas ser o mais especifico possivel)
+  reads this `balance, this `credit
+  {
+    balance + credit
+  }
+
+  function RepInv(): bool
+  reads this `balance
+  reads this `credit
+  {
+    -credit <= balance
+
+  }
+
+
+
    /**
         Constructor, given a maximum credit, it creates a new instanec of
 		CreditAccount where the user can whitdraw beyind her current balance
 		but limited by the credit.
     */
     constructor(maxCredit:int)
+    requires maxCredit >= 0
+    ensures RepInv()
+    {
+        balance := 0;
+        credit := maxCredit;
+    }
 
    /**
         Specify and implement method Deposit below. The functionality of this method
@@ -40,6 +75,13 @@ class CreditAccount {
         so that it satisfies the post-conditions assuming the pre-conditions.
     */
     method Deposit(value:int)
+    requires RepInv() && 0 <= value
+    ensures RepInv()
+    modifies this `balance
+    
+    {
+        balance := balance + value;
+    }
 
    /**
         Specify and implement method Withdraw below. The functionality of this method
@@ -55,6 +97,12 @@ class CreditAccount {
         so that it satisfies the post-conditions assuming the pre-conditions.
     */
     method Withdraw(value:int)
+    requires RepInv() && 0 <= value  <= BalanceWCredit()
+    ensures RepInv()
+    modifies this `balance
+    {
+        balance := balance - value;
+    }
 
    /**
         Main method. Creates an account and execites deposit and
@@ -62,4 +110,5 @@ class CreditAccount {
         annotations, you just have tom implement it.
     */
     method main()
+    
 }

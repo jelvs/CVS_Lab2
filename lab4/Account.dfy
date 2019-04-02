@@ -27,6 +27,18 @@ class Account {
    */
   function method Balance(): int
 
+  //this pode ser omitido( mas ser o mais especifico possivel)
+  reads this `balance
+  {
+    balance
+  }
+
+  function RepInv(): bool
+  reads this `balance
+  {
+    0 <= balance
+  }
+
    /**
     Specify and implement the constructor of the class.
 
@@ -35,6 +47,10 @@ class Account {
     so that it satisfies the post-conditions assuming the pre-conditions.
   */
   constructor()
+  ensures RepInv()
+  {
+    balance := 0;
+  }
 
   /**
     Specify and implement method deposit below. The functionality of this method
@@ -47,6 +63,12 @@ class Account {
     so that it satisfies the post-conditions assuming the pre-conditions.
   */
   method deposit(amount:int)
+  requires RepInv() && 0 <= amount
+  ensures RepInv()
+  modifies this `balance
+  {
+    balance := balance + amount;
+  }
 
   /**
     Specify and implement method withdraw below. The functionality of this method
@@ -60,6 +82,12 @@ class Account {
     so that it satisfies the post-conditions assuming the pre-conditions.
   */
   method withdraw(amount:int)
+  requires RepInv() && 0 <= amount <= Balance()
+  ensures RepInv()
+  modifies this `balance
+  {
+    balance := balance - amount;
+  }
 
   /**
     Main method. Creates an account and executes deposit and
@@ -68,5 +96,11 @@ class Account {
 	  Use this to test our ADT.
 	    <var acc:Account := new Account();>
    */
-  method main()
+  method main(){
+    var a:Account := new Account();
+    a.deposit(10);
+    if( 10 <= a.Balance()){
+      a.withdraw(10);
+    }
+  }
 }
